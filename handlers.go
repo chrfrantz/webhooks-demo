@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"strconv"
 )
@@ -71,14 +72,14 @@ func CallUrl(url string, content string) {
 	//res, err := http.Post(url, "text/plain", bytes.NewReader([]byte(content)))
 	req, err := http.NewRequest(http.MethodPost, url, bytes.NewReader([]byte(content)))
 	if err != nil {
-		fmt.Errorf("%v", "Error during request creation.")
+		log.Printf("%v", "Error during request creation.")
 		return
 	}
 	// Hash content
 	mac := hmac.New(sha256.New, Secret)
 	_, err = mac.Write([]byte(content))
 	if err != nil {
-		fmt.Errorf("%v", "Error during content hashing.")
+		log.Printf("%v", "Error during content hashing.")
 		return
 	}
 	// Convert to string & add to header
@@ -87,11 +88,13 @@ func CallUrl(url string, content string) {
 	client := http.Client{}
 	res, err := client.Do(req)
 	if err != nil {
-		fmt.Println("Error in HTTP request: " + err.Error())
+		log.Println("Error in HTTP request: " + err.Error())
+		return
 	}
 	response, err := ioutil.ReadAll(res.Body)
 	if err != nil {
-		fmt.Println("Something is wrong with invocation response: " + err.Error())
+		log.Println("Something is wrong with invocation response: " + err.Error())
+		return
 	}
 
 	fmt.Println("Webhook invoked. Received status code " + strconv.Itoa(res.StatusCode) +
